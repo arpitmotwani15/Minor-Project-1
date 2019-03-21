@@ -12,17 +12,25 @@ def popular(request):
     return HttpResponse(ans)
 
 def charts(request):
-    title,date= utils.build_chart("Fantasy")
-    ans=''
-    ans+=''.join(title)+"<br/>"
+    ids,titles= utils.build_chart("Fantasy")
+    ans='<table>'
+    for i in range(10):
+        ans+='<tr>'
+        ans+="<td>"+str(ids[i])+"</td><td>"+titles[i]+"</td>"
+        ans+="</tr>"
+    ans+="</table>"
     return HttpResponse(ans)
 
 def personalised(request):
     userId=request.GET["uid"]
     title=request.GET["title"]
-    data=utils.hybrid(int(userId),title)
-    ans=''
-    ans+="<br/>".join(data)
+    titles,ids=utils.hybrid(int(userId),title)
+    ans='<table>'
+    for i in range(10):
+        ans+='<tr>'
+        ans+="<td>"+str(ids[i])+"</td><td>"+titles[i]+"</td>"
+        ans+="</tr>"
+    ans+="</table>"
     return HttpResponse(ans)
 
 
