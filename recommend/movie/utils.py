@@ -6,6 +6,30 @@ import pickle
 with open("C:/Users/hp/Desktop/movie/gen_md.dat", "rb") as input_file:
     gen_md = pickle.load(input_file)
 
+from surprise import Reader, Dataset, SVD, evaluate
+
+with open("C:/Users/hp/Desktop/movie/dumped/indices.dat", "rb") as input_file:
+    indices = pickle.load(input_file)
+with open("C:/Users/hp/Desktop/movie/dumped/id_map.dat", "rb") as input_file:
+    id_map = pickle.load(input_file)
+with open("C:/Users/hp/Desktop/movie/dumped/cosine_sim.dat", "rb") as input_file:
+    cosine_sim = pickle.load(input_file)
+with open("C:/Users/hp/Desktop/movie/dumped/smd.dat", "rb") as input_file:
+    smd = pickle.load(input_file)
+with open("C:/Users/hp/Desktop/movie/dumped/indices_map.dat", "rb") as input_file:
+    indices_map = pickle.load(input_file)
+
+
+reader = Reader()
+ratings = pd.read_csv('C:/Users/hp/Desktop/movie/ratings_small.csv')
+data = Dataset.load_from_df(ratings[['userId', 'movieId', 'rating']], reader)
+data.split(n_folds=5)
+svd = SVD()
+evaluate(svd, data, measures=['RMSE', 'MAE'])
+trainset = data.build_full_trainset()
+svd.train(trainset)
+
+
 def build_chart(genre, percentile=0.85):
     global gen_md
     df = gen_md[gen_md['genre'] == genre]
@@ -30,35 +54,13 @@ def convert_int(x):
     except:
         return np.nan
 
-'''def personalised(request):
-    userId=1
-    title="Inception"
-    reader = Reader()
-    ratings = pd.read_csv('C:/Users/hp/Desktop/movie/ratings_small.csv')
-    data = Dataset.load_from_df(ratings[['userId', 'movieId', 'rating']], reader)
-    data.split(n_folds=5)
-    svd = SVD()
-    evaluate(svd, data, measures=['RMSE', 'MAE'])
-    trainset = data.build_full_trainset()
-    svd.train(trainset)
-    id_map = pd.read_csv('C:/Users/hp/Desktop/movie/links_small.csv')[['movieId', 'tmdbId']]
-    id_map['tmdbId'] = id_map['tmdbId'].apply(convert_int)
-    id_map.columns = ['movieId', 'id']
-    id_map = id_map.merge(smd[['title', 'id']], on='id').set_index('title')
-    # id_map = id_map.set_index('tmdbId')
-
-    indices_map = id_map.set_index('id')
+def hybrid(userId,title):
     idx = indices[title]
-    tmdbId = id_map.loc[title]['id']
-    # print(idx)
-    movie_id = id_map.loc[title]['movieId']
-
     sim_scores = list(enumerate(cosine_sim[int(idx)]))
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
     sim_scores = sim_scores[1:26]
     movie_indices = [i[0] for i in sim_scores]
-
     movies = smd.iloc[movie_indices][['title', 'vote_count', 'vote_average', 'year', 'id']]
     movies['est'] = movies['id'].apply(lambda x: svd.predict(userId, indices_map.loc[x]['movieId']).est)
     movies = movies.sort_values('est', ascending=False)
-    return movies.head(10)'''
+    return list(movies.title)
